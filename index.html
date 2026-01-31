@@ -26,6 +26,45 @@
             margin-bottom: 20px;
         }
 
+        /* Status indicator */
+        .status-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+        .status-bar.loading {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-bar.connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-bar.offline {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .status-bar.hidden {
+            display: none;
+        }
+        .refresh-btn {
+            padding: 5px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+        .refresh-btn:hover {
+            background-color: #2980b9;
+        }
+
         /* Add Event Form */
         .add-event-form {
             background: white;
@@ -80,6 +119,10 @@
         }
         .add-event-btn:hover {
             background-color: #219a52;
+        }
+        .add-event-btn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
         }
 
         /* Legend */
@@ -262,11 +305,32 @@
             font-size: 0.8em;
             padding: 5px;
         }
+
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <h1>School Events Calendar 2026</h1>
     <div class="current-date" id="currentDate"></div>
+
+    <div class="status-bar loading" id="statusBar">
+        <span class="spinner"></span>
+        <span id="statusText">Loading events from Google Sheets...</span>
+        <button class="refresh-btn" onclick="loadEvents()" style="display: none;" id="refreshBtn">Refresh</button>
+    </div>
 
     <div class="add-event-form">
         <h3>Add Event</h3>
@@ -291,7 +355,7 @@
                     <option value="other">Other</option>
                 </select>
             </div>
-            <button class="add-event-btn" onclick="addEvent()">Add Event</button>
+            <button class="add-event-btn" onclick="addEvent()" id="addEventBtn">Add Event</button>
         </div>
     </div>
 
@@ -320,9 +384,17 @@
     <div id="monthlyEvents"></div>
 
     <script>
-        // All events data with categories
-        const events = [
-            // February
+        // ============================================
+        // CONFIGURATION - Paste your Google Apps Script Web App URL here
+        // ============================================
+        const GOOGLE_SCRIPT_URL = 'PASTE_YOUR_WEB_APP_URL_HERE';
+        // ============================================
+
+        // Events array - will be populated from Google Sheets
+        let events = [];
+
+        // Fallback events (used if Google Sheets is not configured)
+        const fallbackEvents = [
             { date: '2026-02-03', title: 'First Semester Progress Reports', category: 'other' },
             { date: '2026-02-05', time: '12:37 - 13:55', title: '1D/1E GFL (beginners) Test 1', category: 'test' },
             { date: '2026-02-10', time: '09:31 - 10:49', title: 'Safer Internet Day - Presentation (Year 1 Pupils)', category: 'other' },
@@ -335,8 +407,6 @@
             { date: '2026-02-23', title: 'Public Holiday (Green Monday)', category: 'holiday' },
             { date: '2026-02-24', title: 'Half Term', category: 'holiday' },
             { date: '2026-02-27', time: '07:54 - 08:30', title: '1B/1D Cyprus History Test 1', category: 'test' },
-
-            // March
             { date: '2026-03-11', time: '12:37 - 13:55', title: '1D Mathematics In Class Assignment', category: 'assignment' },
             { date: '2026-03-13', time: '19:30 - 23:59', title: 'School Play', category: 'other' },
             { date: '2026-03-16', endDate: '2026-03-20', title: 'Science Activities Week & Earth Week Eco Week', category: 'other' },
@@ -346,16 +416,12 @@
             { date: '2026-03-26', time: '11:09 - 12:27', title: '1D English Literature Alternative Assessment - Katerina X.', category: 'test' },
             { date: '2026-03-30', time: '07:45 - 13:55', title: 'PSHE/Clubs 5th Session - No Extended Day Programme', category: 'other' },
             { date: '2026-03-31', time: '12:37 - 13:55', title: '1D/1E GFL (beginners) Test 2', category: 'test' },
-
-            // April
             { date: '2026-04-01', title: 'Public Holiday (Cyprus National Day)', category: 'holiday' },
             { date: '2026-04-03', time: '07:45 - 13:00', title: 'Excursion - No Extended Day Programme', category: 'other' },
             { date: '2026-04-20', title: 'Return to School - Normal Lessons', category: 'other' },
             { date: '2026-04-23', title: 'School Holiday (Archbishop\'s Name Day)', category: 'holiday' },
             { date: '2026-04-24', time: '07:54 - 08:30', title: '1B/1D Cyprus History Assignment Deadline', category: 'assignment' },
             { date: '2026-04-29', time: '09:31 - 10:10', title: '1D Science Test 2', category: 'test' },
-
-            // May
             { date: '2026-05-01', title: 'Public Holiday (Labour Day)', category: 'holiday' },
             { date: '2026-05-04', endDate: '2026-05-08', title: 'STEAM Week - Globeducate Event', category: 'other' },
             { date: '2026-05-05', time: '12:37 - 13:55', title: '1D/1E GFL Project Presentations', category: 'project' },
@@ -365,8 +431,6 @@
             { date: '2026-05-19', title: 'Robotics Challenge (EIB Monceau) - Globeducate Event', category: 'other' },
             { date: '2026-05-22', time: '07:45 - 15:45', title: 'Last Day of Lessons', category: 'other' },
             { date: '2026-05-25', endDate: '2026-06-08', title: 'Final Exams', category: 'exam' },
-
-            // June
             { date: '2026-06-01', title: 'Public Holiday (Holy Spirit)', category: 'holiday' },
             { date: '2026-06-11', title: 'School Holiday (Apostle Varnava)', category: 'holiday' },
             { date: '2026-06-15', endDate: '2026-06-19', title: 'Revision Lessons for Re-examinees', category: 'exam' },
@@ -385,7 +449,6 @@
         };
 
         const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        const dayNamesFull = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
         // Get current date
@@ -421,6 +484,67 @@
             return `${year}-${month}-${day}`;
         }
 
+        // Update status bar
+        function updateStatus(status, message) {
+            const statusBar = document.getElementById('statusBar');
+            const statusText = document.getElementById('statusText');
+            const refreshBtn = document.getElementById('refreshBtn');
+
+            statusBar.className = 'status-bar ' + status;
+            statusText.textContent = message;
+            refreshBtn.style.display = (status === 'connected' || status === 'offline') ? 'inline-block' : 'none';
+        }
+
+        // Load events from Google Sheets
+        async function loadEvents() {
+            if (GOOGLE_SCRIPT_URL === 'PASTE_YOUR_WEB_APP_URL_HERE') {
+                // Not configured - use fallback events
+                events = [...fallbackEvents];
+                updateStatus('offline', 'Using local data (Google Sheets not configured)');
+                renderAll();
+                return;
+            }
+
+            updateStatus('loading', 'Loading events from Google Sheets...');
+
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL);
+                const data = await response.json();
+
+                if (data.success && data.events) {
+                    events = data.events;
+                    updateStatus('connected', `Connected to Google Sheets (${events.length} events)`);
+                } else {
+                    throw new Error(data.error || 'Failed to load events');
+                }
+            } catch (error) {
+                console.error('Error loading events:', error);
+                events = [...fallbackEvents];
+                updateStatus('offline', 'Could not connect to Google Sheets - using local data');
+            }
+
+            renderAll();
+        }
+
+        // Save event to Google Sheets
+        async function saveEventToSheet(event) {
+            if (GOOGLE_SCRIPT_URL === 'PASTE_YOUR_WEB_APP_URL_HERE') {
+                return { success: true, event: event };
+            }
+
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({ action: 'add', event: event })
+                });
+                return await response.json();
+            } catch (error) {
+                console.error('Error saving event:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
         // Get events for a specific date
         function getEventsForDate(date) {
             const dateStr = formatDateLocal(date);
@@ -450,10 +574,11 @@
         }
 
         // Add event function
-        function addEvent() {
+        async function addEvent() {
             const dateInput = document.getElementById('eventDate');
             const textInput = document.getElementById('eventText');
             const categoryInput = document.getElementById('eventCategory');
+            const addBtn = document.getElementById('addEventBtn');
 
             if (!dateInput.value || !textInput.value.trim()) {
                 alert('Please fill in both date and event description.');
@@ -466,17 +591,31 @@
                 category: categoryInput.value
             };
 
-            events.push(newEvent);
+            // Disable button while saving
+            addBtn.disabled = true;
+            addBtn.textContent = 'Saving...';
 
-            // Re-render everything
+            const result = await saveEventToSheet(newEvent);
+
+            if (result.success) {
+                events.push(result.event || newEvent);
+                renderAll();
+                textInput.value = '';
+                alert('Event added successfully!');
+            } else {
+                alert('Failed to save event: ' + (result.error || 'Unknown error'));
+            }
+
+            addBtn.disabled = false;
+            addBtn.textContent = 'Add Event';
+        }
+
+        // Render all calendars
+        function renderAll() {
             renderWeek('thisWeek', thisWeekStart, true);
             renderWeek('nextWeek', nextWeekStart, false);
             document.getElementById('monthlyEvents').innerHTML = '';
             renderMonthlyCalendars();
-
-            // Clear the form
-            textInput.value = '';
-            alert('Event added successfully!');
         }
 
         // Render a week grid
@@ -532,10 +671,6 @@
             }
         }
 
-        // Render this week and next week
-        renderWeek('thisWeek', thisWeekStart, true);
-        renderWeek('nextWeek', nextWeekStart, false);
-
         // Get all months that have events after next week
         function getMonthsWithEvents() {
             const afterNextWeek = new Date(nextWeekEnd);
@@ -547,7 +682,6 @@
                 if (eventDate >= afterNextWeek) {
                     months.add(`${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, '0')}`);
                 }
-                // Also include end dates for multi-day events
                 if (event.endDate) {
                     const endDate = new Date(event.endDate);
                     if (endDate >= afterNextWeek) {
@@ -578,7 +712,6 @@
                 const calendar = document.createElement('div');
                 calendar.className = 'month-calendar';
 
-                // Header row with day names
                 const headerRow = document.createElement('div');
                 headerRow.className = 'month-header-row';
                 ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(day => {
@@ -588,27 +721,22 @@
                 });
                 calendar.appendChild(headerRow);
 
-                // Calendar grid
                 const grid = document.createElement('div');
                 grid.className = 'month-grid';
 
-                // Get first day of month and total days
                 const firstDay = new Date(year, month - 1, 1);
                 const lastDay = new Date(year, month, 0);
                 const totalDays = lastDay.getDate();
 
-                // Get day of week for first day (0 = Sunday, convert to Monday = 0)
                 let startDay = firstDay.getDay() - 1;
                 if (startDay < 0) startDay = 6;
 
-                // Add empty cells for days before the 1st
                 for (let i = 0; i < startDay; i++) {
                     const emptyDay = document.createElement('div');
                     emptyDay.className = 'month-day empty';
                     grid.appendChild(emptyDay);
                 }
 
-                // Add day cells
                 for (let day = 1; day <= totalDays; day++) {
                     const date = new Date(year, month - 1, day);
                     const dayCell = document.createElement('div');
@@ -639,7 +767,6 @@
                     grid.appendChild(dayCell);
                 }
 
-                // Add empty cells to complete the last row
                 const totalCells = startDay + totalDays;
                 const remainingCells = (7 - (totalCells % 7)) % 7;
                 for (let i = 0; i < remainingCells; i++) {
@@ -654,7 +781,8 @@
             });
         }
 
-        renderMonthlyCalendars();
+        // Initialize - load events on page load
+        loadEvents();
     </script>
 </body>
 </html>
