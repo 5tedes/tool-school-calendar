@@ -23,7 +23,63 @@
         .current-date {
             text-align: center;
             color: #666;
+            margin-bottom: 20px;
+        }
+
+        /* Add Event Form */
+        .add-event-form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin-bottom: 30px;
+        }
+        .add-event-form h3 {
+            margin: 0 0 15px 0;
+            color: #2c3e50;
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .form-group label {
+            font-size: 0.85em;
+            color: #666;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.95em;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .form-group.text-input {
+            flex: 1;
+            min-width: 200px;
+        }
+        .add-event-btn {
+            padding: 8px 20px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: bold;
+        }
+        .add-event-btn:hover {
+            background-color: #219a52;
         }
 
         /* Legend */
@@ -51,14 +107,13 @@
         }
 
         /* Category Colors */
-        .cat-holiday { background-color: #e74c3c; color: white; }
-        .cat-test { background-color: #e67e22; color: white; }
+        .cat-holiday { background-color: #9b59b6; color: white; }
+        .cat-test { background-color: #e74c3c; color: white; }
         .cat-assignment { background-color: #f1c40f; color: #333; }
-        .cat-exam { background-color: #9b59b6; color: white; }
+        .cat-exam { background-color: #8e44ad; color: white; }
         .cat-project { background-color: #3498db; color: white; }
-        .cat-activity { background-color: #27ae60; color: white; }
-        .cat-admin { background-color: #95a5a6; color: white; }
-        .cat-special { background-color: #1abc9c; color: white; }
+        .cat-other { background-color: #95a5a6; color: white; }
+        .cat-homework { background-color: #e67e22; color: white; }
 
         /* Week View */
         .week-section {
@@ -146,7 +201,7 @@
             text-decoration: line-through;
         }
 
-        /* Month Tables */
+        /* Month Calendar */
         .month-section {
             margin-bottom: 30px;
         }
@@ -156,53 +211,48 @@
             padding-bottom: 10px;
             border-bottom: 2px solid #3498db;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: white;
+        .month-calendar {
+            background: white;
+            border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            overflow: hidden;
         }
-        th {
+        .month-header-row {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
             background-color: #34495e;
             color: white;
-            padding: 12px 15px;
-            text-align: left;
             font-weight: bold;
+            font-size: 0.85em;
         }
-        td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #e0e0e0;
-            vertical-align: top;
+        .month-header-row div {
+            padding: 10px;
+            text-align: center;
         }
-        tr:last-child td {
-            border-bottom: none;
+        .month-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
         }
-        tr:hover {
-            background-color: #f8f9fa;
+        .month-day {
+            min-height: 100px;
+            padding: 8px;
+            border-right: 1px solid #eee;
+            border-bottom: 1px solid #eee;
+            background: white;
         }
-        .date-cell {
+        .month-day:nth-child(7n) {
+            border-right: none;
+        }
+        .month-day.empty {
+            background-color: #f9f9f9;
+        }
+        .month-day .day-num {
             font-weight: bold;
             color: #2c3e50;
-            width: 140px;
-            white-space: nowrap;
+            margin-bottom: 5px;
         }
-        .category-cell {
-            width: 120px;
-        }
-        .category-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: bold;
-        }
-        .event-cell {
-            line-height: 1.6;
-        }
-        .event-time {
-            color: #666;
-            font-size: 0.9em;
+        .month-day.weekend .day-num {
+            color: #999;
         }
 
         /* No events message */
@@ -218,15 +268,41 @@
     <h1>School Events Calendar 2026</h1>
     <div class="current-date" id="currentDate"></div>
 
+    <div class="add-event-form">
+        <h3>Add Event</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="eventDate">Date</label>
+                <input type="date" id="eventDate">
+            </div>
+            <div class="form-group text-input">
+                <label for="eventText">Event Description</label>
+                <input type="text" id="eventText" placeholder="Enter event description...">
+            </div>
+            <div class="form-group">
+                <label for="eventCategory">Category</label>
+                <select id="eventCategory">
+                    <option value="test">Test</option>
+                    <option value="assignment">Assignment</option>
+                    <option value="exam">Exam</option>
+                    <option value="project">Project</option>
+                    <option value="homework">Homework Due</option>
+                    <option value="holiday">Holiday</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <button class="add-event-btn" onclick="addEvent()">Add Event</button>
+        </div>
+    </div>
+
     <div class="legend">
         <div class="legend-item"><div class="legend-color cat-holiday"></div> Holiday / No School</div>
         <div class="legend-item"><div class="legend-color cat-test"></div> Test</div>
         <div class="legend-item"><div class="legend-color cat-assignment"></div> Assignment</div>
         <div class="legend-item"><div class="legend-color cat-exam"></div> Exam</div>
         <div class="legend-item"><div class="legend-color cat-project"></div> Project / Presentation</div>
-        <div class="legend-item"><div class="legend-color cat-activity"></div> School Activity</div>
-        <div class="legend-item"><div class="legend-color cat-admin"></div> Administrative</div>
-        <div class="legend-item"><div class="legend-color cat-special"></div> Special Event</div>
+        <div class="legend-item"><div class="legend-color cat-homework"></div> Homework Due</div>
+        <div class="legend-item"><div class="legend-color cat-other"></div> Other</div>
     </div>
 
     <div class="week-section">
@@ -247,12 +323,12 @@
         // All events data with categories
         const events = [
             // February
-            { date: '2026-02-03', title: 'First Semester Progress Reports', category: 'admin' },
+            { date: '2026-02-03', title: 'First Semester Progress Reports', category: 'other' },
             { date: '2026-02-05', time: '12:37 - 13:55', title: '1D/1E GFL (beginners) Test 1', category: 'test' },
-            { date: '2026-02-10', time: '09:31 - 10:49', title: 'Safer Internet Day - Presentation (Year 1 Pupils)', category: 'activity' },
+            { date: '2026-02-10', time: '09:31 - 10:49', title: 'Safer Internet Day - Presentation (Year 1 Pupils)', category: 'other' },
             { date: '2026-02-11', time: '12:37 - 13:55', title: '1D Mathematics Test 3', category: 'test' },
-            { date: '2026-02-12', time: '07:45 - 11:09', title: 'Normal Lessons', category: 'admin' },
-            { date: '2026-02-12', time: '11:10 - 13:00', title: '"Tsiknopempti" Event - No Extended Day Programme', category: 'special' },
+            { date: '2026-02-12', time: '07:45 - 11:09', title: 'Normal Lessons', category: 'other' },
+            { date: '2026-02-12', time: '11:10 - 13:00', title: '"Tsiknopempti" Event - No Extended Day Programme', category: 'other' },
             { date: '2026-02-13', time: '12:39 - 13:39', title: '1D History Test', category: 'test' },
             { date: '2026-02-18', time: '09:31 - 10:16', title: '1D Science Test 1 (Second Semester)', category: 'test' },
             { date: '2026-02-19', time: '11:09 - 12:27', title: '1D English Reading Test - Katerina X.', category: 'test' },
@@ -262,32 +338,32 @@
 
             // March
             { date: '2026-03-11', time: '12:37 - 13:55', title: '1D Mathematics In Class Assignment', category: 'assignment' },
-            { date: '2026-03-13', time: '19:30 - 23:59', title: 'School Play', category: 'special' },
-            { date: '2026-03-16', endDate: '2026-03-20', title: 'Science Activities Week & Earth Week Eco Week', category: 'activity' },
+            { date: '2026-03-13', time: '19:30 - 23:59', title: 'School Play', category: 'other' },
+            { date: '2026-03-16', endDate: '2026-03-20', title: 'Science Activities Week & Earth Week Eco Week', category: 'other' },
             { date: '2026-03-19', time: '07:53 - 09:11', title: '1D French Test - G.Savva', category: 'test' },
-            { date: '2026-03-24', time: '09:31 - 10:49', title: 'School Celebration (25th March & 1st April)', category: 'special' },
+            { date: '2026-03-24', time: '09:31 - 10:49', title: 'School Celebration (25th March & 1st April)', category: 'other' },
             { date: '2026-03-25', title: 'Public Holiday (Greek Independence Day)', category: 'holiday' },
             { date: '2026-03-26', time: '11:09 - 12:27', title: '1D English Literature Alternative Assessment - Katerina X.', category: 'test' },
-            { date: '2026-03-30', time: '07:45 - 13:55', title: 'PSHE/Clubs 5th Session - No Extended Day Programme', category: 'special' },
+            { date: '2026-03-30', time: '07:45 - 13:55', title: 'PSHE/Clubs 5th Session - No Extended Day Programme', category: 'other' },
             { date: '2026-03-31', time: '12:37 - 13:55', title: '1D/1E GFL (beginners) Test 2', category: 'test' },
 
             // April
             { date: '2026-04-01', title: 'Public Holiday (Cyprus National Day)', category: 'holiday' },
-            { date: '2026-04-03', time: '07:45 - 13:00', title: 'Excursion - No Extended Day Programme', category: 'special' },
-            { date: '2026-04-20', title: 'Return to School - Normal Lessons', category: 'admin' },
+            { date: '2026-04-03', time: '07:45 - 13:00', title: 'Excursion - No Extended Day Programme', category: 'other' },
+            { date: '2026-04-20', title: 'Return to School - Normal Lessons', category: 'other' },
             { date: '2026-04-23', title: 'School Holiday (Archbishop\'s Name Day)', category: 'holiday' },
             { date: '2026-04-24', time: '07:54 - 08:30', title: '1B/1D Cyprus History Assignment Deadline', category: 'assignment' },
             { date: '2026-04-29', time: '09:31 - 10:10', title: '1D Science Test 2', category: 'test' },
 
             // May
             { date: '2026-05-01', title: 'Public Holiday (Labour Day)', category: 'holiday' },
-            { date: '2026-05-04', endDate: '2026-05-08', title: 'STEAM Week - Globeducate Event', category: 'activity' },
+            { date: '2026-05-04', endDate: '2026-05-08', title: 'STEAM Week - Globeducate Event', category: 'other' },
             { date: '2026-05-05', time: '12:37 - 13:55', title: '1D/1E GFL Project Presentations', category: 'project' },
             { date: '2026-05-06', time: '11:09 - 12:27', title: '1D English Language Project Presentations - Katerina X.', category: 'project' },
             { date: '2026-05-06', time: '12:37 - 13:55', title: '1D Maths Test 4', category: 'test' },
             { date: '2026-05-07', time: '11:09 - 12:27', title: '1D English Language Project Presentations - Katerina X.', category: 'project' },
-            { date: '2026-05-19', title: 'Robotics Challenge (EIB Monceau) - Globeducate Event', category: 'activity' },
-            { date: '2026-05-22', time: '07:45 - 15:45', title: 'Last Day of Lessons', category: 'admin' },
+            { date: '2026-05-19', title: 'Robotics Challenge (EIB Monceau) - Globeducate Event', category: 'other' },
+            { date: '2026-05-22', time: '07:45 - 15:45', title: 'Last Day of Lessons', category: 'other' },
             { date: '2026-05-25', endDate: '2026-06-08', title: 'Final Exams', category: 'exam' },
 
             // June
@@ -295,7 +371,7 @@
             { date: '2026-06-11', title: 'School Holiday (Apostle Varnava)', category: 'holiday' },
             { date: '2026-06-15', endDate: '2026-06-19', title: 'Revision Lessons for Re-examinees', category: 'exam' },
             { date: '2026-06-22', endDate: '2026-06-23', title: 'Re-exams', category: 'exam' },
-            { date: '2026-06-26', time: '19:00 - 23:59', title: 'End of Year Awards and Graduation Ceremony', category: 'special' }
+            { date: '2026-06-26', time: '19:00 - 23:59', title: 'End of Year Awards and Graduation Ceremony', category: 'other' }
         ];
 
         const categoryNames = {
@@ -304,12 +380,12 @@
             'assignment': 'Assignment',
             'exam': 'Exam',
             'project': 'Project',
-            'activity': 'Activity',
-            'admin': 'Admin',
-            'special': 'Special'
+            'other': 'Other',
+            'homework': 'Homework'
         };
 
         const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const dayNamesFull = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
         // Get current date
@@ -319,6 +395,9 @@
         // Display current date
         document.getElementById('currentDate').textContent =
             `Today: ${dayNames[today.getDay()]}, ${today.getDate()} ${monthNames[today.getMonth()]} ${today.getFullYear()}`;
+
+        // Set default date in form to today
+        document.getElementById('eventDate').valueAsDate = today;
 
         // Calculate week start (Monday)
         function getMonday(date) {
@@ -368,6 +447,36 @@
         // Check if date is today
         function isToday(date) {
             return date.getTime() === today.getTime();
+        }
+
+        // Add event function
+        function addEvent() {
+            const dateInput = document.getElementById('eventDate');
+            const textInput = document.getElementById('eventText');
+            const categoryInput = document.getElementById('eventCategory');
+
+            if (!dateInput.value || !textInput.value.trim()) {
+                alert('Please fill in both date and event description.');
+                return;
+            }
+
+            const newEvent = {
+                date: dateInput.value,
+                title: textInput.value.trim(),
+                category: categoryInput.value
+            };
+
+            events.push(newEvent);
+
+            // Re-render everything
+            renderWeek('thisWeek', thisWeekStart, true);
+            renderWeek('nextWeek', nextWeekStart, false);
+            document.getElementById('monthlyEvents').innerHTML = '';
+            renderMonthlyCalendars();
+
+            // Clear the form
+            textInput.value = '';
+            alert('Event added successfully!');
         }
 
         // Render a week grid
@@ -427,38 +536,37 @@
         renderWeek('thisWeek', thisWeekStart, true);
         renderWeek('nextWeek', nextWeekStart, false);
 
-        // Get events after next week, grouped by month
-        function getEventsAfterNextWeek() {
+        // Get all months that have events after next week
+        function getMonthsWithEvents() {
             const afterNextWeek = new Date(nextWeekEnd);
             afterNextWeek.setDate(afterNextWeek.getDate() + 1);
 
-            const futureEvents = events.filter(event => {
+            const months = new Set();
+            events.forEach(event => {
                 const eventDate = new Date(event.date);
-                return eventDate >= afterNextWeek;
-            });
-
-            // Group by month
-            const grouped = {};
-            futureEvents.forEach(event => {
-                const date = new Date(event.date);
-                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-                if (!grouped[monthKey]) {
-                    grouped[monthKey] = [];
+                if (eventDate >= afterNextWeek) {
+                    months.add(`${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, '0')}`);
                 }
-                grouped[monthKey].push(event);
+                // Also include end dates for multi-day events
+                if (event.endDate) {
+                    const endDate = new Date(event.endDate);
+                    if (endDate >= afterNextWeek) {
+                        months.add(`${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}`);
+                    }
+                }
             });
 
-            return grouped;
+            return Array.from(months).sort();
         }
 
-        // Render monthly tables
-        function renderMonthlyEvents() {
+        // Render monthly calendars
+        function renderMonthlyCalendars() {
             const container = document.getElementById('monthlyEvents');
-            const grouped = getEventsAfterNextWeek();
+            const months = getMonthsWithEvents();
 
-            Object.keys(grouped).sort().forEach(monthKey => {
-                const [year, month] = monthKey.split('-');
-                const monthName = monthNames[parseInt(month) - 1];
+            months.forEach(monthKey => {
+                const [year, month] = monthKey.split('-').map(Number);
+                const monthName = monthNames[month - 1];
 
                 const section = document.createElement('div');
                 section.className = 'month-section';
@@ -467,50 +575,86 @@
                 heading.textContent = `${monthName} ${year}`;
                 section.appendChild(heading);
 
-                const table = document.createElement('table');
-                table.innerHTML = `
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Category</th>
-                            <th>Event</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                `;
+                const calendar = document.createElement('div');
+                calendar.className = 'month-calendar';
 
-                const tbody = table.querySelector('tbody');
-
-                grouped[monthKey].forEach(event => {
-                    const date = new Date(event.date);
-                    const row = document.createElement('tr');
-
-                    let dateStr = `${dayNames[date.getDay()]}, ${date.getDate()} ${monthNames[date.getMonth()]}`;
-                    if (event.endDate) {
-                        const endDate = new Date(event.endDate);
-                        dateStr += ` - ${endDate.getDate()} ${monthNames[endDate.getMonth()]}`;
-                    }
-
-                    let eventContent = event.title;
-                    if (event.time) {
-                        eventContent = `<span class="event-time">${event.time}</span> ${event.title}`;
-                    }
-
-                    row.innerHTML = `
-                        <td class="date-cell">${dateStr}</td>
-                        <td class="category-cell"><span class="category-badge cat-${event.category}">${categoryNames[event.category]}</span></td>
-                        <td class="event-cell">${eventContent}</td>
-                    `;
-
-                    tbody.appendChild(row);
+                // Header row with day names
+                const headerRow = document.createElement('div');
+                headerRow.className = 'month-header-row';
+                ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(day => {
+                    const dayHeader = document.createElement('div');
+                    dayHeader.textContent = day;
+                    headerRow.appendChild(dayHeader);
                 });
+                calendar.appendChild(headerRow);
 
-                section.appendChild(table);
+                // Calendar grid
+                const grid = document.createElement('div');
+                grid.className = 'month-grid';
+
+                // Get first day of month and total days
+                const firstDay = new Date(year, month - 1, 1);
+                const lastDay = new Date(year, month, 0);
+                const totalDays = lastDay.getDate();
+
+                // Get day of week for first day (0 = Sunday, convert to Monday = 0)
+                let startDay = firstDay.getDay() - 1;
+                if (startDay < 0) startDay = 6;
+
+                // Add empty cells for days before the 1st
+                for (let i = 0; i < startDay; i++) {
+                    const emptyDay = document.createElement('div');
+                    emptyDay.className = 'month-day empty';
+                    grid.appendChild(emptyDay);
+                }
+
+                // Add day cells
+                for (let day = 1; day <= totalDays; day++) {
+                    const date = new Date(year, month - 1, day);
+                    const dayCell = document.createElement('div');
+                    dayCell.className = 'month-day';
+
+                    const dayOfWeek = date.getDay();
+                    if (dayOfWeek === 0 || dayOfWeek === 6) {
+                        dayCell.classList.add('weekend');
+                    }
+
+                    const dayNum = document.createElement('div');
+                    dayNum.className = 'day-num';
+                    dayNum.textContent = day;
+                    dayCell.appendChild(dayNum);
+
+                    const dayEvents = getEventsForDate(date);
+                    dayEvents.forEach(event => {
+                        const eventDiv = document.createElement('div');
+                        eventDiv.className = `day-event cat-${event.category}`;
+                        let eventText = event.title;
+                        if (event.endDate && event.date === formatDateLocal(date)) {
+                            eventText += ' (starts)';
+                        }
+                        eventDiv.textContent = eventText;
+                        dayCell.appendChild(eventDiv);
+                    });
+
+                    grid.appendChild(dayCell);
+                }
+
+                // Add empty cells to complete the last row
+                const totalCells = startDay + totalDays;
+                const remainingCells = (7 - (totalCells % 7)) % 7;
+                for (let i = 0; i < remainingCells; i++) {
+                    const emptyDay = document.createElement('div');
+                    emptyDay.className = 'month-day empty';
+                    grid.appendChild(emptyDay);
+                }
+
+                calendar.appendChild(grid);
+                section.appendChild(calendar);
                 container.appendChild(section);
             });
         }
 
-        renderMonthlyEvents();
+        renderMonthlyCalendars();
     </script>
 </body>
 </html>
