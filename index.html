@@ -10,8 +10,9 @@
         }
         body {
             font-family: Arial, sans-serif;
-            max-width: 1100px;
+            max-width: 1000px;
             margin: 40px auto;
+            margin-right: 180px;
             padding: 20px;
             background-color: #f5f5f5;
         }
@@ -72,26 +73,30 @@
 
         /* Legend */
         .legend {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
             display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            justify-content: center;
-            margin-bottom: 30px;
-            padding: 15px;
+            flex-direction: column;
+            gap: 8px;
+            padding: 12px;
             background: white;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 100;
         }
         .legend-item {
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: 0.85em;
+            font-size: 0.75em;
         }
         .legend-color {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             border-radius: 3px;
+            flex-shrink: 0;
         }
 
         /* Category Colors */
