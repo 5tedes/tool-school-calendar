@@ -48,6 +48,24 @@ To populate your Google Sheet with the existing calendar events:
 2. Click **Run**
 3. This will add all the current events to your Google Sheet
 
+## School Years
+
+The calendar opens on the current school year (September - August) automatically. Past years stay available from the **Year 1 / Year 2 / ...** links in the header (or `index.html?year=1`).
+
+Each year is stored in its own tab of the same Google Sheet:
+
+| School year | Class | Sheet tab |
+|-------------|-------|-----------|
+| 2025/26 | 1D | `Events` |
+| 2026/27 | 2D | `Events-Y2` |
+| 2027/28 onwards | — | `Events-Y3`, `Events-Y4`, ... (created automatically) |
+
+**Each September:**
+1. Add the new class to `CLASS_BY_YEAR` near the top of the `<script>` section in `index.html` (e.g. `3: '3B'`)
+2. Optionally add that year's built-in events to `fallbackEventsByYear`
+
+**After updating `google-apps-script.js`:** paste it into the Apps Script editor, then go to **Deploy > Manage deployments**, edit the existing deployment and choose **New version**, so the Web App URL stays the same. To load the 2D calendar into the Sheet, run `initializeYear2Data` once.
+
 ## How It Works
 
 - **Loading events**: When you open the calendar, it fetches events from your Google Sheet
@@ -57,7 +75,7 @@ To populate your Google Sheet with the existing calendar events:
 
 ## Google Sheet Columns
 
-The script expects these columns in your "Events" sheet:
+The script expects these columns in each year's events tab:
 
 | Column | Description | Example |
 |--------|-------------|---------|
